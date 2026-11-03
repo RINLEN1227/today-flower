@@ -1,0 +1,877 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>花谱 · 十五朵</title>
+<style>
+  :root{
+    --bg:#0D1211;
+    --ink:#F2EBDF;
+    --dim:#8B968F;
+    --red:#C9534A;
+    --line:rgba(242,235,223,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"KaiTi","STKaiti","Kaiti SC","楷体",serif;
+    -webkit-font-smoothing:antialiased;
+    padding:80px 0 120px;
+  }
+
+  header{
+    max-width:1180px;margin:0 auto 72px;padding:0 40px;
+    text-align:center;
+  }
+  header h1{
+    font-size:40px;font-weight:400;letter-spacing:.42em;text-indent:.42em;
+  }
+  header p{
+    margin-top:18px;font-size:15px;line-height:2;color:var(--dim);
+    letter-spacing:.06em;
+  }
+  header .rule{
+    width:44px;height:1px;background:var(--line);margin:34px auto 0;
+  }
+
+  main{
+    max-width:1180px;margin:0 auto;padding:0 40px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:66px 48px;
+  }
+
+  .card{padding-top:16px;border-top:1px solid var(--line)}
+
+  .meta{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:14px;
+  }
+  .meta b{color:var(--red);font-weight:400}
+
+  .stage{display:grid;place-items:center;margin-bottom:18px}
+  .stage canvas{
+    width:224px;height:224px;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+  }
+
+  h2{display:flex;justify-content:center;line-height:0;margin-bottom:12px}
+  h2 canvas{
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    display:block;
+  }
+  h2 .t,.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  .huayu{
+    text-align:center;font-size:13px;letter-spacing:.16em;color:var(--red);
+    margin-bottom:22px;
+  }
+
+  .words p{
+    font-size:14px;line-height:2;color:#CFC8BA;letter-spacing:.03em;
+  }
+  .words p + p{margin-top:10px}
+  .words p:last-child{color:var(--ink)}
+
+  footer.return{
+    max-width:1180px;margin:104px auto 0;padding:0 40px;text-align:center;
+  }
+  footer.return::before{
+    content:"";display:block;width:44px;height:1px;
+    background:var(--line);margin:0 auto 38px;
+  }
+  .ret{
+    display:inline-block;text-decoration:none;
+    font-family:inherit;font-size:14px;letter-spacing:.34em;text-indent:.34em;
+    color:var(--ink);padding:13px 36px 13px 40px;
+    border:1px solid rgba(242,235,223,.22);
+    transition:border-color .3s,background .3s;
+  }
+  .ret:hover,.ret:focus-visible{border-color:var(--red);background:rgba(201,83,74,.09)}
+
+  .card{opacity:0;animation:rise .9s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  @media (max-width:640px){
+    body{padding:52px 0 80px}
+    header{padding:0 24px;margin-bottom:48px}
+    header h1{font-size:30px}
+    main{padding:0 24px;gap:52px}
+    .stage canvas{width:200px;height:200px}
+    footer.return{margin-top:72px;padding:0 24px}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>花 谱</h1>
+    <p>十五朵花，六种心情。每一朵都留了一点阴影——<br>
+       只夸你「很棒」的话，是骗人的。</p>
+    <div class="rule"></div>
+  </header>
+
+  <main id="grid"></main>
+
+  <footer class="return">
+    <a class="ret" id="ret" href="index.html">返回</a>
+  </footer>
+
+<script>
+/* ===========================================================
+   像素花谱 · 十五种
+   画法约定（沿用鹤望兰那一版）：
+   · 只用纯色块，硬边，一块 1px；
+   · 每片花瓣最多两三层明暗，不描边；
+   · 花头占画幅主体，茎叶只做交代；
+   · 一切运动都是整数位移，不做插值。
+   =========================================================== */
+(function (root) {
+  var D2R = Math.PI / 180;
+
+  /* ---------- 画笔 ---------- */
+  function P(ctx) {
+    function px(x, y, w, h, c) {
+      x = Math.round(x); y = Math.round(y);
+      w = Math.round(w); h = Math.round(h);
+      if (w < 1) w = 1;
+      if (h < 1) h = 1;
+      ctx.fillStyle = c;
+      ctx.fillRect(x, y, w, h);
+    }
+    function disc(cx, cy, r, c) {
+      cx = Math.round(cx); cy = Math.round(cy);
+      var lim = r * r + r * 0.55;
+      for (var y = -r; y <= r; y++) {
+        for (var x = -r; x <= r; x++) {
+          if (x * x + y * y <= lim) { ctx.fillStyle = c; ctx.fillRect(cx + x, cy + y, 1, 1); }
+        }
+      }
+    }
+    function curve(x0, y0, cx, cy, x1, y1, w, c) {
+      ctx.fillStyle = c;
+      for (var i = 0; i <= 64; i++) {
+        var t = i / 64, mt = 1 - t;
+        var x = mt * mt * x0 + 2 * mt * t * cx + t * t * x1;
+        var y = mt * mt * y0 + 2 * mt * t * cy + t * t * y1;
+        ctx.fillRect(Math.round(x), Math.round(y), w, 1);
+      }
+    }
+    /* 尖头楔形：根部最宽，尖端收到 0 */
+    function blade(x0, y0, ang, L, w0, w1, c) {
+      var ca = Math.cos(ang), sa = Math.sin(ang);
+      var n = Math.max(2, Math.floor(L * 1.4));
+      ctx.fillStyle = c;
+      for (var i = 0; i <= n; i++) {
+        var t = i / n, w = w0 + (w1 - w0) * t;
+        var x = x0 + ca * (t * L), y = y0 + sa * (t * L);
+        var half = w / 2, nx = -sa, ny = ca;
+        var x1 = x + nx * half, y1 = y + ny * half;
+        var x2 = x - nx * half, y2 = y - ny * half;
+        ctx.fillRect(Math.round(Math.min(x1, x2)), Math.round(Math.min(y1, y2)),
+          Math.max(1, Math.round(Math.abs(x1 - x2))), Math.max(1, Math.round(Math.abs(y1 - y2))));
+      }
+    }
+    /* 圆头花瓣：两头收，中间最宽 */
+    function petal(x0, y0, ang, L, wMax, c) {
+      var ca = Math.cos(ang), sa = Math.sin(ang);
+      var n = Math.max(3, Math.floor(L * 1.8));
+      ctx.fillStyle = c;
+      for (var i = 0; i <= n; i++) {
+        var t = i / n;
+        var w = wMax * Math.sin(Math.PI * Math.pow(t, 0.72));
+        if (w < 0.7) continue;
+        var x = x0 + ca * (t * L), y = y0 + sa * (t * L);
+        var half = w / 2, nx = -sa, ny = ca;
+        var x1 = x + nx * half, y1 = y + ny * half;
+        var x2 = x - nx * half, y2 = y - ny * half;
+        ctx.fillRect(Math.round(Math.min(x1, x2)), Math.round(Math.min(y1, y2)),
+          Math.max(1, Math.round(Math.abs(x1 - x2))), Math.max(1, Math.round(Math.abs(y1 - y2))));
+      }
+    }
+    /* 圆弧：a0→a1（度），按半径画一圈点，厚 th */
+    function arc(cx, cy, r, a0, a1, th, c) {
+      var steps = Math.max(8, Math.round(Math.abs(a1 - a0) * r / 40));
+      ctx.fillStyle = c;
+      for (var i = 0; i <= steps; i++) {
+        var a = (a0 + (a1 - a0) * (i / steps)) * Math.PI / 180;
+        var x = Math.round(cx + Math.cos(a) * r);
+        var y = Math.round(cy + Math.sin(a) * r);
+        ctx.fillRect(x, y, Math.max(1, th), Math.max(1, th));
+      }
+    }
+    return { px: px, disc: disc, curve: curve, blade: blade, petal: petal, arc: arc };
+  }
+
+  /* 呼吸与颤动，全花共用一套节奏 */
+  function anim(t) {
+    return {
+      b: 1 + Math.sin(t * 1.1) * 0.045,
+      r: Math.sin(t * 0.85 + 1.7) > 0.55 ? 1 : 0,
+      s: Math.sin(t * 0.9 + 0.4) > 0.7 ? 1 : 0
+    };
+  }
+
+  /* 一圈花瓣 */
+  function ring(p, cx, cy, n, L, wMax, c, rot) {
+    rot = rot || 0;
+    for (var i = 0; i < n; i++) {
+      p.petal(cx, cy, (rot + i * 360 / n) * D2R, L, wMax, c);
+    }
+  }
+
+  /* ---------- 01 洋甘菊 ---------- */
+  function chamomile(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#4C7544', G2 = '#6E9C5C';
+    p.curve(31, 64, 28, 52, 31, 34, 2, G1);
+    p.curve(31, 64, 28, 52, 31, 34, 1, G2);
+    /* 羽状细叶，三对 */
+    [[54, -150], [50, -32], [58, -160], [57, -26], [62, -146], [62, -36]].forEach(function (q, i) {
+      p.blade(31, q[0], q[1] * D2R, i < 2 ? 9 : 6, 3, 1, i % 2 ? G1 : G2);
+    });
+    /* 花瓣：先一层暗的垫底，再一层亮的，出厚度 */
+    ring(p, 31, 26, 10, 12.5 * a.b, 5.4, '#E3DAC0');
+    ring(p, 31, 26, 10, 11.2 * a.b, 4.4, '#F8F4E6', 18);
+    p.disc(31, 26, 4, '#F2C13C');
+    p.disc(31, 26, 2, '#D89A24');
+    p.px(30, 25, 1, 1, '#FBDF8A');
+  }
+
+  /* ---------- 02 铃兰 ---------- */
+  function lily(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#5E8250', G2 = '#7BA066';
+    /* 两片基生叶 */
+    p.blade(24, 64, -104 * D2R, 40, 11, 3, G1);
+    p.blade(24, 64, -88 * D2R, 34, 4, 1, G2);
+    p.blade(27, 64, -66 * D2R, 30, 9, 2, G1);
+    /* 花葶越过头顶，向右弯 */
+    p.curve(26, 60, 26, 30, 47, 21, 2, G1);
+    /* 铃铛：沿花葶右下方一列 */
+    var bells = [[28, 40, 3], [33, 34, 3], [39, 29, 3], [45, 25, 2]];
+    bells.forEach(function (q, i) {
+      var bx = q[0], by = q[1] + Math.round(a.r * (i % 2 ? 1 : 0));
+      p.px(bx, by - 2, 1, 2, G1);
+      p.disc(bx, by + 1, q[2], '#F5F8EE');
+      p.px(bx - q[2], by + q[2], q[2] * 2 + 1, 1, '#DDE4D3');
+      p.px(bx - 1, by + 1, 1, 1, '#CBD5C0');
+    });
+    /* 顶端的小花苞 */
+    p.disc(48, 19, 1, '#EDF2E4');
+  }
+
+  /* ---------- 03 蓝星花 ---------- */
+  function bluestar(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544';
+    p.curve(32, 64, 30, 48, 32, 38, 2, G);
+    p.blade(32, 54, -158 * D2R, 9, 3, 1, G);
+    p.blade(32, 50, -24 * D2R, 8, 3, 1, G);
+    /* 主花：五瓣星 */
+    ring(p, 32, 28, 5, 11 * a.b, 6, '#7FAEDD', -90);
+    ring(p, 32, 28, 5, 10 * a.b, 4.6, '#9CC3EA', -54);
+    p.disc(32, 28, 2, '#EAF3FC');
+    /* 副花 */
+    p.curve(32, 44, 24, 44, 18, 41, 1, G);
+    ring(p, 18, 40, 5, 6.5 * a.b, 3.6, '#9CC3EA', -90);
+    p.disc(18, 40, 1, '#EAF3FC');
+  }
+
+  /* ---------- 04 紫阳花 ---------- */
+  function hydrangea(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#3F6236', G2 = '#547D46';
+    p.curve(32, 64, 32, 48, 32, 40, 3, G1);
+    p.petal(32, 58, -168 * D2R, 17, 13, G1);
+    p.petal(32, 60, -12 * D2R, 16, 12, G1);
+    p.petal(32, 58, -168 * D2R, 13, 4, G2);
+    p.petal(32, 60, -12 * D2R, 12, 4, G2);
+
+    /* 花球：按同心圆排满，挤成一团才像绣球，散着放就成了贴片 */
+    var pts = [[32, 22]];
+    var r1 = 6, r2 = 12;
+    for (var i = 0; i < 5; i++) {
+      pts.push([32 + Math.cos(i * 72 * D2R) * r1, 24 + Math.sin(i * 72 * D2R) * r1]);
+    }
+    for (var j = 0; j < 9; j++) {
+      var ang = (j / 9) * 360 + 20;
+      pts.push([32 + Math.cos(ang * D2R) * r2, 24 + Math.sin(ang * D2R) * r2 * 0.92]);
+    }
+    pts.push([32, 36]);
+
+    pts.forEach(function (q) {
+      var y = q[1];
+      var c = y < 18 ? '#CBB9E8' : (y < 26 ? '#B29CDA' : (y < 32 ? '#9C84C9' : '#8A70BA'));
+      ring(p, q[0], q[1], 4, 4.6 * a.b, 4.2, c, 45);
+      p.px(q[0], q[1], 1, 1, '#F2ECFB');
+    });
+  }
+
+  /* ---------- 05 风信子 ---------- */
+  function hyacinth(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#4C6D42', G2 = '#688F55';
+    p.blade(30, 64, -110 * D2R, 34, 7, 2, G1);
+    p.blade(34, 64, -70 * D2R, 32, 7, 2, G1);
+    p.blade(32, 64, -92 * D2R, 26, 3, 1, G2);
+    p.curve(32, 64, 32, 48, 32, 38, 3, '#5E8250');
+    /* 花穗：上小下大，一列小星花 */
+    for (var i = 0; i < 8; i++) {
+      var y = 42 - i * 3.4;
+      var dx = (i % 2 ? 2 : -2) * (1 - i / 10);
+      var L = (4.4 - i * 0.32) * a.b;
+      var c = i < 3 ? '#C7B2DE' : (i < 6 ? '#A98CC8' : '#8E6FB0');
+      ring(p, 32 + dx, y, 4, L, 3.2, c, 45 + i * 10);
+      p.px(32 + dx, y, 1, 1, '#E4D9F2');
+    }
+    p.disc(32, 54, 2, '#5E8250');
+  }
+
+  /* ---------- 06 勿忘我 ---------- */
+  function forget(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544', B1 = '#6C9BD2', B2 = '#8AB2E2';
+    p.curve(30, 64, 27, 48, 30, 36, 2, G);
+    p.curve(30, 48, 24, 44, 19, 39, 1, G);
+    p.curve(30, 52, 37, 48, 42, 43, 1, G);
+    p.blade(30, 57, -150 * D2R, 8, 3, 1, G);
+    var fs = [[30, 32, 4.8], [19, 37, 3.8], [42, 41, 3.6]];
+    fs.forEach(function (q, i) {
+      ring(p, q[0], q[1], 5, q[2] * 1.9 * a.b, q[2] * 1.05, i ? B2 : B1, -90 + i * 12);
+      p.px(q[0], q[1], 1, 1, '#F3D75F');
+    });
+  }
+
+  /* ---------- 07 三色堇 ---------- */
+  /* 名字里就写着「三色」，那就画三朵，三种最常见的花色：
+     紫黄（最经典的那一色）、白紫、黄褐。一株多花，本来就长这样。 */
+  function pansy(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#43683C', G2 = '#5C8A4E';
+
+    /* 主茎与两条侧枝 */
+    p.curve(32, 64, 31, 56, 32, 44, 2, G);
+    p.curve(32, 53, 25, 48, 19, 43, 1, G2);
+    p.curve(32, 50, 40, 45, 47, 39, 1, G2);
+    /* 基部两片圆叶 */
+    p.petal(31, 61, -168 * D2R, 11, 8, G);
+    p.petal(33, 62, -12 * D2R, 10, 8, G);
+    p.petal(31, 61, -168 * D2R, 8, 3, G2);
+    p.petal(33, 62, -12 * D2R, 7, 3, G2);
+
+    /* 五瓣一张脸：上两瓣、侧两瓣、下一瓣。瓣是圆的，尖了就成星芒。
+       花心一块明黄，下瓣压两道深纹——三色堇的「脸」全在这两处。 */
+    function face(cx, cy, s, c) {
+      var L = 9.4 * s * a.b, w = 8.8 * s;
+      p.petal(cx, cy, -110 * D2R, L, w, c.up);
+      p.petal(cx, cy, -70 * D2R, L, w, c.up);
+      p.petal(cx - s, cy + s, 170 * D2R, L * 0.94, w, c.side);
+      p.petal(cx + s, cy + s, 10 * D2R, L * 0.94, w, c.side);
+      p.petal(cx, cy + 2 * s, 90 * D2R, L * 0.82, w * 1.28, c.down);
+      p.disc(cx, cy - s, Math.max(1, Math.round(2.4 * s)), c.eye);
+      p.disc(cx, cy - s, Math.max(1, Math.round(0.9 * s)), c.eyecore);
+      p.px(cx - 2.6 * s, cy + 3.2 * s, Math.max(2, Math.round(4.6 * s)), 1, c.blotch);
+      p.px(cx - 1.8 * s, cy + 4.3 * s, Math.max(2, Math.round(3.4 * s)), 1, c.blotch);
+      /* 花萼：盖住花瓣与花梗的接缝 */
+      p.px(cx - s, cy + L * 0.80, Math.max(2, Math.round(2.4 * s)), 1, G);
+    }
+
+    /* 一 · 紫黄：上紫下黄，最认得出来的一色 */
+    face(33, 21, 1, {
+      up: '#6B4FA0', side: '#7E62B0', down: '#EFCF6A',
+      eye: '#EFCF6A', eyecore: '#C08F2E', blotch: '#43306B'
+    });
+    /* 二 · 白紫：白瓣带紫晕，花心一点明黄 */
+    face(16, 37, 0.76, {
+      up: '#DCD0EF', side: '#F2ECFA', down: '#FDFAFF',
+      eye: '#EFCB55', eyecore: '#C49A2A', blotch: '#8A72BE'
+    });
+    /* 三 · 黄褐：暖黄瓣，花心压深褐，远看是一片金 */
+    face(48, 34, 0.82, {
+      up: '#E8B93C', side: '#F3D067', down: '#FBE7A4',
+      eye: '#B4762C', eyecore: '#7A4519', blotch: '#7A4519'
+    });
+  }
+
+  /* ---------- 08 樱花 ---------- */
+  function sakura(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var W = '#6B4A3A', W2 = '#8A624D', P1 = '#F8D8E2', P2 = '#FCEEF2', C1 = '#E89DB2';
+    p.curve(6, 58, 24, 50, 46, 30, 2, W);
+    p.curve(26, 46, 34, 34, 40, 23, 2, W);
+    p.curve(6, 58, 24, 50, 46, 30, 1, W2);
+    function blossom(cx, cy, s) {
+      var L = 8.2 * s * a.b, w = 7.8 * s;
+      for (var i = 0; i < 5; i++) {
+        var ang = (-90 + i * 72) * D2R;
+        /* 每瓣由两片窄的合成，尖端自然裂开一道口，那是樱花的记号 */
+        p.petal(cx, cy, ang - 7 * D2R, L, w * 0.68, P1);
+        p.petal(cx, cy, ang + 7 * D2R, L, w * 0.68, P1);
+        p.petal(cx, cy, ang, L * 0.62, w * 0.62, P2);
+      }
+      p.disc(cx, cy, 1, C1);
+      p.px(cx - 2, cy - 2, 1, 1, C1);
+      p.px(cx + 2, cy - 2, 1, 1, C1);
+      p.px(cx, cy - 3, 1, 1, C1);
+    }
+    blossom(23, 41, 1);
+    blossom(40, 28, 0.92);
+    blossom(49, 45, 0.62);
+    /* 两枚还没开的花苞 */
+    p.disc(12, 48, 1, P1);
+    p.disc(33, 19, 1, P1);
+  }
+
+  /* ---------- 09 蔷薇 ---------- */
+  function rose(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C6D42', G2 = '#688F55';
+    p.curve(32, 64, 30, 52, 32, 42, 2, G);
+    p.blade(31, 56, -156 * D2R, 10, 5, 2, G);
+    p.blade(33, 60, -24 * D2R, 9, 5, 2, G);
+    p.blade(31, 56, -156 * D2R, 8, 2, 1, G2);
+    p.px(30, 50, 1, 1, '#8FA37F');
+    p.px(33, 46, 1, 1, '#8FA37F');
+
+    var cx = 32, cy = 28, R = 11 * a.b;
+    /* 底：整朵的暗红，先把体积垫出来 */
+    p.disc(cx, cy, Math.round(R), '#8E2833');
+    /* 外圈六瓣，只露出边缘一点，形才不是个圆饼 */
+    for (var i = 0; i < 6; i++) {
+      p.petal(cx, cy, (-90 + i * 60) * D2R, R + 1.5, 11, '#A8323E');
+    }
+    /* 花心：三段 C 形弧线，玫瑰的卷心全在这几道螺旋里 */
+    p.arc(cx, cy, R - 2, 150, 350, 2, '#C2454F');
+    p.arc(cx, cy, R - 5, -10, 190, 2, '#D05C66');
+    p.arc(cx, cy, R - 7.5, 200, 380, 1, '#DE7B84');
+    p.arc(cx, cy, 2.5, 20, 300, 1, '#F0A0A6');
+    p.disc(cx, cy, 1, '#8E2833');
+  }
+
+  /* ---------- 10 桔梗 ---------- */
+  function platycodon(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544', V1 = '#7B6FB8', V2 = '#9689CF', V3 = '#5B4F94';
+    p.curve(32, 64, 31, 50, 32, 41, 2, G);
+    p.blade(32, 56, -154 * D2R, 9, 4, 1, G);
+    p.blade(32, 52, -26 * D2R, 8, 4, 1, G);
+    /* 未开的球状花苞，桔梗的名字就来自它 */
+    p.curve(32, 50, 40, 48, 44, 45, 1, G);
+    p.disc(47, 42, 4, '#B8ADE0');
+    p.disc(46, 40, 2, '#D2CBEA');
+    p.px(44, 45, 6, 1, G);
+    var cx = 32, cy = 31;
+    /* 五枚瓣：根宽、腰略收、尖头，拼成五角星而不是尖刺 */
+    for (var i = 0; i < 5; i++) {
+      var ang = (-90 + i * 72) * D2R;
+      p.petal(cx, cy, ang, 12 * a.b, 11, V1);
+      p.blade(cx + Math.cos(ang) * 8, cy + Math.sin(ang) * 8, ang, 6 * a.b, 4, 0.6, V1);
+      p.petal(cx, cy, ang, 8 * a.b, 6, V2);
+    }
+    p.disc(cx, cy, 3, '#E6E1F2');
+    p.disc(cx, cy, 1, V3);
+  }
+
+  /* ---------- 11 香豌豆 ---------- */
+  function sweetpea(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544', G2 = '#7BA066';
+    p.curve(30, 64, 25, 50, 32, 42, 2, G);
+    p.blade(28, 58, -150 * D2R, 10, 4, 1, G);
+    p.curve(32, 42, 33, 39, 34, 36, 2, G2);
+    /* 卷须 */
+    [[33, 33], [31, 30], [27, 27], [24, 27], [22, 29]].forEach(function (q) {
+      p.px(q[0], q[1], 1, 1, G2);
+    });
+    var cx = 34, cy = 33;
+    /* 花瓣在根部都收成零，得先垫个实心花心，否则中间是个洞 */
+    p.disc(cx, cy + 1, 3, '#E9A2C0');
+    /* 旗瓣：一片大圆瓣立在最上 */
+    p.petal(cx, cy + 2, -84 * D2R, 13 * a.b, 12, '#E9A2C0');
+    p.petal(cx, cy, -84 * D2R, 10 * a.b, 6, '#F8D6E2');
+    /* 两翼向两侧张开，压在旗瓣根部 */
+    p.petal(cx - 3, cy + 3, 166 * D2R, 10 * a.b, 9, '#F2BBD0');
+    p.petal(cx + 3, cy + 3, 14 * D2R, 10 * a.b, 9, '#F2BBD0');
+    /* 龙骨：中间一小片 */
+    p.petal(cx, cy + 4, 90 * D2R, 7 * a.b, 6, '#C3A8DC');
+    /* 花萼 */
+    p.px(cx - 1, cy + 7, 3, 1, G2);
+  }
+
+  /* ---------- 12 鹤望兰 ---------- */
+  function strelitzia(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var b = 1 + Math.sin(t * 1.15) * 0.055;
+    var r = a.r;
+    /* 花茎与叶：保留原绿，只压暗一档，让红更跳 */
+    p.curve(26, 64, 27, 54, 32, 43, 3, "#3C6234");
+    p.curve(25, 64, 26, 54, 31, 43, 1, "#568245");
+
+    p.blade(28, 57, (-155 + r) * D2R, 19, 9, 2, "#375F33");
+    p.blade(28, 56, (-155 + r) * D2R, 16, 3, 1, "#558547");
+    p.blade(29, 55, (46 - r) * D2R, 11, 7, 2, "#375F33");
+    p.blade(29, 54, (46 - r) * D2R, 10, 3, 1, "#558547");
+
+    /* 花心 */
+    for (var yy = -3; yy <= 3; yy++) {
+      for (var xx = -3; xx <= 3; xx++) {
+        if (xx * xx + yy * yy <= 9) p.px(32 + xx, 41 + yy, 1, 1, "#8C1F26");
+      }
+    }
+
+    /* 五枚萼片：由深到浅的朱红 */
+    var fan = [
+      [-118, 16, "#8C1F26"],
+      [-100, 20, "#A82A2E"],
+      [-80, 21, "#C0342F"],
+      [-60, 18, "#D6554A"],
+      [-40, 15, "#C0342F"]
+    ];
+    for (var i = 0; i < fan.length; i++) {
+      p.blade(32, 40, fan[i][0] * D2R, fan[i][1] * b, 6, 2, fan[i][2]);
+    }
+    for (var j = 0; j < fan.length; j++) {
+      p.blade(31, 39, fan[j][0] * D2R, (fan[j][1] - 5) * b, 2, 1, "#E3857A");
+    }
+
+    /* 佛焰苞（鸟喙）：白，暗部走暖灰 */
+    p.blade(32, 44, -18 * D2R, 17, 2, 1, "#A29B8D");
+    p.blade(32, 41, -20 * D2R, 20, 7, 2, "#E3DDCE");
+    p.blade(32, 40, -20 * D2R, 14, 2, 1, "#FFFBF0");
+
+    p.blade(34, 44, 60 * D2R, 5, 3, 1, "#D9A29A");
+    p.px(30, 39, 2, 2, "#FFF7EA");
+  }
+
+  /* ---------- 13 飞燕草 ---------- */
+  function delphinium(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544', B1 = '#5B7FC4', B2 = '#7E9CD8', B3 = '#9DB3E4';
+    p.curve(32, 64, 32, 46, 32, 22, 2, G);
+    /* 掌状裂叶 */
+    [-150, -118, -62, -30].forEach(function (d, i) {
+      p.blade(32, 60, d * D2R, i % 2 ? 14 : 17, 5, 1, G);
+    });
+    p.blade(32, 56, -90 * D2R, 12, 3, 1, '#688F55');
+    /* 花穗：下大上小，每朵带一根距 */
+    for (var i = 0; i < 6; i++) {
+      var y = 44 - i * 4.4;
+      var L = (5.4 - i * 0.42) * a.b;
+      var dx = (i % 2 ? 3 : -3) * (1 - i / 9);
+      p.blade(32 + dx, y + 1, -150 * D2R, L, 2, 1, B1);  /* 距 */
+      p.blade(32 + dx, y + 1, -30 * D2R, L, 2, 1, B1);
+      ring(p, 32 + dx, y, 4, L, 3.6, i < 2 ? B3 : (i < 4 ? B2 : B1), 45);
+      p.px(32 + dx, y, 1, 1, '#DCE6F7');
+    }
+    p.disc(32, 8, 1, B3);
+  }
+
+  /* ---------- 14 向日葵 ---------- */
+  function sunflower(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#3F6236', G2 = '#577E45', Y1 = '#F2C230', Y2 = '#E0A81F';
+    p.curve(32, 64, 30, 52, 32, 40, 3, G1);
+    p.blade(31, 54, -158 * D2R, 15, 9, 3, G1);
+    p.blade(31, 54, -158 * D2R, 12, 3, 1, G2);
+    p.blade(34, 58, -22 * D2R, 13, 8, 3, G1);
+    p.blade(34, 58, -22 * D2R, 10, 3, 1, G2);
+    var cx = 32, cy = 28;
+    /* 舌状花：两圈，外圈深一档 */
+    ring(p, cx, cy, 14, 11 * a.b, 6.4, Y2);
+    ring(p, cx, cy, 14, 9.4 * a.b, 5.2, Y1, 360 / 28);
+    /* 花盘 */
+    p.disc(cx, cy, 7, '#6B4A2A');
+    p.disc(cx, cy, 5, '#5A3D22');
+    for (var y = -5; y <= 5; y += 2) {
+      for (var x = -5; x <= 5; x += 2) {
+        if (x * x + y * y <= 26) p.px(cx + x, cy + y, 1, 1, '#8A6238');
+      }
+    }
+    p.disc(cx, cy, 2, '#3E2A18');
+  }
+
+  /* ---------- 15 波斯菊 ---------- */
+  function cosmos(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G = '#4C7544', G2 = '#688F55';
+    p.curve(32, 64, 30, 48, 32, 36, 1, G);
+    /* 羽状细叶 */
+    [[56, -156], [56, -24], [61, -150], [61, -30], [66, -158], [66, -22]].forEach(function (q, i) {
+      p.blade(32, q[0], q[1] * D2R, 10, 2, 1, i % 2 ? G : G2);
+    });
+    ring(p, 32, 28, 8, 13 * a.b, 7.4, '#D06C96');
+    ring(p, 32, 28, 8, 11.6 * a.b, 6.2, '#E58BB0', 22.5);
+    /* 花瓣上的浅纹 */
+    for (var i = 0; i < 8; i++) {
+      p.petal(32, 28, (i * 45 + 22.5) * D2R, 10 * a.b, 2.2, '#F2AEC8');
+    }
+    p.disc(32, 28, 3, '#E6B33C');
+    p.disc(32, 28, 1, '#C99A24');
+  }
+
+  root.FLOWERS = {
+    chamomile: { no: '01', name: '洋甘菊', en: 'Chamomile', latin: 'Matricaria', huayu: '苦难中的力量', draw: chamomile },
+    lily:      { no: '02', name: '铃兰',   en: 'Lily of the Valley', latin: 'Convallaria', huayu: '幸福再次降临', draw: lily },
+    bluestar:  { no: '03', name: '蓝星花', en: 'Blue Star', latin: 'Oxypetalum', huayu: '互信的心 · 把握现在', draw: bluestar },
+    hydrangea: { no: '04', name: '紫阳花', en: 'Hydrangea', latin: 'Hydrangea', huayu: '希望 · 善变', draw: hydrangea },
+    hyacinth:  { no: '05', name: '风信子', en: 'Hyacinth', latin: 'Hyacinthus', huayu: '重生之爱', draw: hyacinth },
+    forget:    { no: '06', name: '勿忘我', en: 'Forget-me-not', latin: 'Myosotis', huayu: '请不要忘记我', draw: forget },
+    pansy:     { no: '07', name: '三色堇', en: 'Pansy', latin: 'Viola', huayu: '请思念我 · 沉思', draw: pansy },
+    sakura:    { no: '08', name: '樱花',   en: 'Cherry Blossom', latin: 'Prunus', huayu: '对你微笑 · 等你回来', draw: sakura },
+    rose:      { no: '09', name: '蔷薇',   en: 'Rose', latin: 'Rosa', huayu: '爱的思念 · 爱与美', draw: rose },
+    platycodon:{ no: '10', name: '桔梗',   en: 'Balloon Flower', latin: 'Platycodon', huayu: '永恒的爱 · 无望的爱', draw: platycodon },
+    sweetpea:  { no: '11', name: '香豌豆', en: 'Sweet Pea', latin: 'Lathyrus', huayu: '片刻的喜悦', draw: sweetpea },
+    strelitzia:{ no: '12', name: '鹤望兰', en: 'Bird of Paradise', latin: 'Strelitzia', huayu: '自由 · 用心去爱', draw: strelitzia },
+    delphinium:{ no: '13', name: '飞燕草', en: 'Larkspur', latin: 'Delphinium', huayu: '自由 · 美丽轻盈', draw: delphinium },
+    sunflower: { no: '14', name: '向日葵', en: 'Sunflower', latin: 'Helianthus', huayu: '爱慕 · 沉默的爱', draw: sunflower },
+    cosmos:    { no: '15', name: '波斯菊', en: 'Cosmos', latin: 'Cosmos', huayu: '少女的真心 · 自由', draw: cosmos }
+  };
+
+  root.FLOWER_PALETTE = {
+    bg: '#0D1211',
+    ink: '#F2EBDF',
+    dim: '#8B968F',
+    accent: '#C9534A',
+    pollen: 'rgba(240,226,208,'
+  };
+
+  /* 花粉：十五朵共用，标题页的主线 */
+  root.makePollen = function (n, w, h) {
+    var arr = [];
+    for (var i = 0; i < n; i++) {
+      arr.push({
+        x: 6 + Math.random() * (w - 12),
+        y0: Math.random() * (h + 6),
+        v: 1.6 + Math.random() * 3.2,
+        a: 0.20 + Math.random() * 0.42,
+        ph: Math.random() * 6.28
+      });
+    }
+    return arr;
+  };
+})(window);
+</script>
+<script>
+/* 十五朵花的文案：三段，短、短、长，最后一段最重 */
+(function (root) {
+  root.FLOWER_WORDS = {
+    chamomile: [
+      '今天你不用表现得很行。我知道你已经把牙咬得很紧了，紧到别人都看不出来。',
+      '洋甘菊在欧洲被叫作「月亮的草药」，它不治病，只陪人把这一夜睡过去。',
+      '你已经很努力了。我爱你，就爱你现在这副撑得有点狼狈的样子。'
+    ],
+    lily: [
+      '「再次」两个字，是说给失去过的人听的。',
+      '铃兰一整个春天都低着头，香气却最浓——原来低头也可以这么有力量，所以我不催你抬头。',
+      '每年五月一日，法国人把它送给最爱的人。今天我也送给你，我陪你等。'
+    ],
+    bluestar: [
+      '蓝星花每天只开一天。今天的这朵，明天就不再是它了。',
+      '所以你今天这份不安，也只有今天这一份，明天会换成别的。你不用现在就把一切都想明白。',
+      '我爱你，包括你现在这个说不清楚的状态。'
+    ],
+    hydrangea: [
+      '紫阳花会随土壤变色，同一株能开出三种颜色，人就说它善变。',
+      '可没有一朵花是故意变色的，它只是在回应脚下的土。',
+      '你最近反复无常，我知道那不是你靠不住，你只是脚下的土变了。没关系，我一直爱你。'
+    ],
+    hyacinth: [
+      '风信子的球茎要在黑暗里埋很久才肯发芽。',
+      '希腊神话里，它是从一场告别里长出来的花。你现在的等待不是在浪费时间，是在往下长。',
+      '等到那一天，你会自己破土。我爱你，也等你开花。'
+    ],
+    forget: [
+      '传说里，一个骑士为你摘这朵花，脚下一滑，落水前把它抛上岸，喊的最后一句话是「不要忘记我」。',
+      '它那么小，小到要凑近才看得清，可它敢提这个要求。',
+      '我也想跟你提一个：无论你走到哪儿，都有人在想你。我想你，真的。'
+    ],
+    pansy: [
+      '三色堇在法语里和「思想」是同一个词。',
+      '三百年前，有人把它的样子刻在戒指内侧，用来传一句不能明说的爱。',
+      '今天我用这朵花，说那句我一直没说出口的：我很想你，想到会走神。'
+    ],
+    sakura: [
+      '樱花只开七天，所以日本人看樱花的时候，心里都带着舍不得。',
+      '美好的东西从来都很短。可樱花每年都回来，一棵树能开上一百年。',
+      '所以我不怕这一次的分别，我等得到下一次。'
+    ],
+    rose: [
+      '蔷薇有刺，可没有人因为它有刺就不爱它。',
+      '爱一个人也是这样：我知道你有难相处的地方，有会扎人的时候，我都知道，我还是选你。',
+      '我爱你，连同你的刺。'
+    ],
+    platycodon: [
+      '桔梗的花语是「永恒的爱」，后面紧跟着一句「无望的爱」。',
+      '它把最好的和最坏的写在同一句话里，因为爱本来就是这样。',
+      '我知道也许没有结果，可我还是爱你。这不是悲观，是我这辈子最勇敢的一句。'
+    ],
+    sweetpea: [
+      '香豌豆的花语是「片刻的喜悦」，它自己并不觉得短暂是缺憾。',
+      '你笑起来的那几秒钟，我记了很久。',
+      '短暂的东西不是不值钱，是更值钱。所以再笑一次给我看吧，就现在。'
+    ],
+    strelitzia: [
+      '鹤望兰长成了一只正要飞走的鸟的样子，可它一步也没飞走。',
+      '想逃不是错。你累了，想离开一下，这很正常。',
+      '我只想让你知道：你随时可以回来，这里有人爱你，不会因为你逃过一次就少爱一点。'
+    ],
+    delphinium: [
+      '飞燕草开在细得几乎撑不住的花茎上，风一吹就晃，但它从来不倒。',
+      '有人说它轻浮，可轻本来就是一种本事。',
+      '你也可以轻一点，不用每件事都那么用力。底下有我托着。'
+    ],
+    sunflower: [
+      '向日葵一辈子朝着太阳，别人说它忘了自己也是光源。',
+      '我倒觉得不是：它只是选了一个方向，然后认真地看。',
+      '今天我选了跟你同一个方向。你走到哪儿，我转到哪儿。'
+    ],
+    cosmos: [
+      '波斯菊在秋风里摇得很厉害，看着要倒了，其实根扎得稳。',
+      '你今天笑得这么开心，我希望你相信这份开心是真的，不是你装出来的。',
+      '你值得这么好的一天，也值得被这样喜欢。'
+    ]
+  };
+
+  /* 显示顺序 */
+  root.FLOWER_ORDER = [
+    'chamomile', 'lily', 'bluestar', 'hydrangea', 'hyacinth',
+    'forget', 'pansy', 'sakura', 'rose', 'platycodon',
+    'sweetpea', 'strelitzia', 'delphinium', 'sunflower', 'cosmos'
+  ];
+})(window);
+</script>
+<script>
+/* ---------- 像素字：栅格化 → 二值化 → 整数放大 ---------- */
+function pixelTitle(host, text, opt) {
+  opt = opt || {};
+  var BASE = opt.base || 26;
+  var SCALE = opt.scale || 2;
+  var GAP = opt.gap || 4;
+  var TH = opt.th || 120;
+
+  var probe = document.createElement('canvas').getContext('2d');
+  probe.font = '700 ' + BASE + 'px "Microsoft YaHei","微软雅黑","SimHei","黑体",sans-serif';
+
+  var chars = text.split('');
+  var widths = chars.map(function (ch) { return Math.ceil(probe.measureText(ch).width); });
+  var W = widths.reduce(function (a, b) { return a + b; }, 0) + GAP * (chars.length - 1);
+  var H = BASE + 14;
+
+  var off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  var o = off.getContext('2d');
+  o.font = probe.font;
+  o.textBaseline = 'top';
+  o.fillStyle = '#FFFFFF';
+  var x = 0;
+  chars.forEach(function (ch, i) {
+    o.fillText(ch, x, 4);
+    x += widths[i] + GAP;
+  });
+
+  var img;
+  try { img = o.getImageData(0, 0, W, H); } catch (e) { return; }
+
+  var d = img.data, minX = W, minY = H, maxX = -1, maxY = -1;
+  for (var i = 0; i < d.length; i += 4) {
+    if (d[i + 3] >= TH) {
+      var p = i / 4, px = p % W, py = (p / W) | 0;
+      if (px < minX) minX = px;
+      if (px > maxX) maxX = px;
+      if (py < minY) minY = py;
+      if (py > maxY) maxY = py;
+      d[i] = 0xF2; d[i + 1] = 0xEB; d[i + 2] = 0xDF; d[i + 3] = 255;
+    } else {
+      d[i + 3] = 0;
+    }
+  }
+  if (maxX < 0) return;
+
+  var cw = maxX - minX + 1, chh = maxY - minY + 1;
+  var out = document.createElement('canvas');
+  out.width = cw; out.height = chh;
+  out.getContext('2d').putImageData(img, -minX, -minY);
+  out.style.width = (cw * SCALE) + 'px';
+  out.style.height = (chh * SCALE) + 'px';
+  out.setAttribute('aria-hidden', 'true');
+
+  host.innerHTML = '';
+  host.appendChild(out);
+}
+
+/* ---------- 铺十五张卡 ---------- */
+(function () {
+  var grid = document.getElementById('grid');
+  var shots = [];
+
+  FLOWER_ORDER.forEach(function (id, i) {
+    var f = FLOWERS[id];
+    var words = FLOWER_WORDS[id] || [];
+
+    var card = document.createElement('article');
+    card.className = 'card';
+    card.id = 'f-' + id;
+    card.style.animationDelay = (i * 0.05) + 's';
+    card.innerHTML =
+      '<div class="meta"><span><b>' + f.no + '</b></span><span>' + f.latin + '</span></div>' +
+      '<div class="stage"><canvas width="64" height="64" aria-label="' + f.name + '像素画"></canvas></div>' +
+      '<h2 aria-label="' + f.name + '"><span class="t">' + f.name + '</span></h2>' +
+      '<div class="huayu">' + f.huayu + '</div>' +
+      '<div class="words">' + words.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '</div>';
+    grid.appendChild(card);
+
+    pixelTitle(card.querySelector('h2'), f.name);
+
+    shots.push({
+      ctx: card.querySelector('canvas').getContext('2d'),
+      draw: f.draw,
+      pollen: makePollen(10, 64, 64),
+      ph: (i * 1.37) % 6.28
+    });
+  });
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function frame(now) {
+    var t = now / 1000;
+    for (var i = 0; i < shots.length; i++) {
+      var s = shots[i], ctx = s.ctx;
+      var sway = reduce ? 0 : Math.round(Math.sin(t * 0.62 + s.ph) * 1.2);
+      ctx.clearRect(0, 0, 64, 64);
+      ctx.save();
+      ctx.translate(sway, 0);
+      s.draw(ctx, t + s.ph);
+      ctx.restore();
+      if (!reduce) {
+        for (var k = 0; k < s.pollen.length; k++) {
+          var p = s.pollen[k];
+          var y = ((p.y0 - (t + s.ph) * p.v) % 78 + 78) % 78 - 6;
+          var x = p.x + Math.sin(t * 0.7 + p.ph) * 3;
+          ctx.fillStyle = 'rgba(240,226,208,' + p.a + ')';
+          ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+/* 返回刚才那张花笺：先留一把钥匙，index.html 认它 */
+(function () {
+  var ret = document.getElementById('ret');
+  if (!ret) return;
+  ret.addEventListener('click', function () {
+    try { sessionStorage.setItem('mood:return', '1'); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
