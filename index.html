@@ -14,6 +14,7 @@
     --ambient:min(640px,68vh,92vw);
     --ambient-half:min(320px,34vh,46vw);
     --core:clamp(96px,23%,126px);
+    --mood-rgb:201,83,74;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -29,6 +30,25 @@
     content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
     background:radial-gradient(92% 62% at 50% 40%,rgba(201,83,74,.06),rgba(201,83,74,0) 70%);
   }
+
+  /* ---------- 背景：纸纹 / 心情底光 / 星尘 / 暗角 ---------- */
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-tint{
+    position:absolute;inset:0;
+    background-color:rgb(var(--mood-rgb));
+    opacity:.085;
+    transition:background-color 1.6s ease;
+  }
+  .bg-grain{
+    position:absolute;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity:.032;
+  }
+  .bg-vignette{
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse at 50% 45%,rgba(13,18,17,0) 36%,rgba(0,0,0,.42) 100%);
+  }
+  #stars{position:absolute;inset:0;width:100%;height:100%;display:block}
 
   .screen{
     position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -270,6 +290,14 @@
 </style>
 </head>
 <body>
+
+<!-- 背景层：纸纹、心情底光、星尘、暗角 -->
+<div class="bg" id="bg" aria-hidden="true">
+  <div class="bg-tint" id="bg-tint"></div>
+  <div class="bg-grain"></div>
+  <canvas id="stars"></canvas>
+  <div class="bg-vignette"></div>
+</div>
 
 <!-- 开始页与答题页共用的背景：一圈花 + 一团光粒 -->
 <div class="ambient" id="ambient">
@@ -1488,6 +1516,77 @@
     ];
   }
 
+  /* 背景的底色跟着心情走；第一题 / 封面用一点暖红 */
+  function setBgMood(weights) {
+    var rgb = [201, 83, 74];
+    if (weights) {
+      var r = 0, g = 0, b = 0, total = 0;
+      for (var i = 0; i < DIM_ORDER.length; i++) {
+        var w = weights[DIM_ORDER[i]] || 0;
+        if (w > 0) {
+          var c = PALETTE_RGB[i];
+          r += c[0] * w;
+          g += c[1] * w;
+          b += c[2] * w;
+          total += w;
+        }
+      }
+      if (total > 0) {
+        rgb = [Math.round(r / total), Math.round(g / total), Math.round(b / total)];
+      }
+    }
+    document.documentElement.style.setProperty('--mood-rgb', rgb.join(','));
+  }
+
+  /* 背景星尘：细碎的像素小星，慢慢明暗 */
+  var starsCv = null, starsCtx = null, starsDpr = 1, starsW = 0, starsH = 0, starList = [];
+
+  function buildStars() {
+    starsCv = document.getElementById('stars');
+    if (!starsCv) return;
+
+    starsW = window.innerWidth;
+    starsH = window.innerHeight;
+    starsDpr = Math.min(window.devicePixelRatio || 1, 2);
+    starsCv.width = Math.round(starsW * starsDpr);
+    starsCv.height = Math.round(starsH * starsDpr);
+    starsCtx = starsCv.getContext('2d');
+    starsCtx.setTransform(starsDpr, 0, 0, starsDpr, 0, 0);
+    starsCtx.imageSmoothingEnabled = false;
+
+    var count = starsW < 600 ? 100 : 170;
+    var colors = PALETTE.concat(['#F2EBDF', '#F2EBDF', '#F2EBDF']);
+    starList = [];
+    for (var i = 0; i < count; i++) {
+      starList.push({
+        x: Math.random() * starsW,
+        y: Math.random() * starsH,
+        s: Math.random() < 0.06 ? 3 : (Math.random() < 0.35 ? 2 : 1),
+        c: colors[Math.floor(Math.random() * colors.length)],
+        base: 0.25 + Math.random() * 0.55,
+        sp: 0.45 + Math.random() * 1.5,
+        ph: Math.random() * Math.PI * 2
+      });
+    }
+    drawStars(0);
+  }
+
+  function drawStars(t) {
+    if (!starsCtx) return;
+    starsCtx.clearRect(0, 0, starsW, starsH);
+    starsCtx.save();
+    starsCtx.globalCompositeOperation = 'lighter';
+
+    for (var i = 0; i < starList.length; i++) {
+      var s = starList[i];
+      var tw = reduce ? 0.55 : (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      starsCtx.globalAlpha = s.base * (0.25 + 0.75 * tw);
+      starsCtx.fillStyle = s.c;
+      starsCtx.fillRect(Math.round(s.x), Math.round(s.y), s.s, s.s);
+    }
+    starsCtx.restore();
+  }
+
   function easeInCubic(t) { return t * t * t; }
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
@@ -1532,6 +1631,7 @@
     if (!orbit) return;
 
     currentWeights = weights;
+    setBgMood(weights);
     var ps = orbit.particles;
     var now = performance.now() / 1000;
     var total = 0;
@@ -2013,6 +2113,7 @@
     lastFrameTime = now;
 
     stepAmbient(now);
+    if (!reduce) drawStars(t);
 
     if (orbit) {
       orbit.spinSpeed += (orbit.spinTarget - orbit.spinSpeed) * Math.min(1, dt * 7);
@@ -2054,6 +2155,7 @@
   ambEl = document.getElementById('ambient');
   pixelTitle($('.cover-head h1'), '今日花签', { base: 28, scale: 2, gap: 6 });
   buildOrbit();
+  buildStars();
 
   $('#start').addEventListener('click', startExperience);
   $('#back').addEventListener('click', back);
@@ -2062,6 +2164,7 @@
     clearTimeout(orbitTimer);
     orbitTimer = setTimeout(function () {
       buildOrbit();
+      buildStars();
       if (!orbit) return;
       if (current === 'quiz' || current === 'loading') {
         orbit.ringTarget = 0.43 / 0.39;
