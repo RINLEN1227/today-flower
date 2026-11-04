@@ -295,7 +295,7 @@
   <div class="inner">
     <div class="quizbox">
       <div class="qbar">
-        <span><b id="qnow">01</b> / 05</span>
+        <span><b id="qnow">01</b> / <span id="qtotal">07</span></span>
         <span id="qlabel"></span>
       </div>
       <div class="prog"><i id="progbar"></i></div>
@@ -967,36 +967,66 @@
     bright: '明亮'
   };
 
-  /* 五道题：不随机、不打乱，顺序就是情绪往下走的顺序 */
+  /* 七道题：不随机、不打乱，顺序就是情绪往下走的顺序 */
   var QUESTIONS = [
     {
       tag: '天气',
       q: '今天醒来，心里是什么天气？',
       opts: [
-        { t: '天还没亮，我就先醒了。',     w: { endure: 2 } },
-        { t: '有雾，看不清远一点的地方。', w: { drift: 2 } },
-        { t: '风很大，云被吹得乱七八糟。', w: { escape: 2 } },
-        { t: '有点吵，但光是暖的。',       w: { bright: 2, warm: 1 } }
+        { t: '天还没亮，我就先醒了。',                 w: { endure: 2 } },
+        { t: '有雾，看不清远一点的地方。',             w: { drift: 2 } },
+        { t: '醒来第一件事，是想知道某个人现在好不好。', w: { yearn: 2, warm: 0.5 } },
+        { t: '有点吵，但身边有人，光是暖的。',         w: { warm: 2, bright: 1 } },
+        { t: '风很大，云被吹得乱七八糟。',             w: { escape: 2, drift: 0.5 } },
+        { t: '窗外很亮，今天好像可以过得不错。',       w: { bright: 2, warm: 0.5 } }
+      ]
+    },
+    {
+      tag: '身体',
+      q: '身体现在是什么感觉？',
+      opts: [
+        { t: '肩膀和牙关都绷着，放松不下来。',           w: { endure: 2 } },
+        { t: '轻飘飘的，像没睡醒，也像没着陆。',         w: { drift: 2 } },
+        { t: '胸口有点闷，像压着一句没说出口的话。',     w: { yearn: 2, warm: 0.5 } },
+        { t: '累，但是暖的，像刚被人抱过。',             w: { warm: 2, bright: 0.5 } },
+        { t: '坐不住，想走，想跑，心里还有一股火。',     w: { escape: 2 } },
+        { t: '很久没这么轻了，想伸个懒腰。',             w: { bright: 2, warm: 0.5 } }
       ]
     },
     {
       tag: '心事',
       q: '那件还没解决的事，现在在哪儿？',
       opts: [
-        { t: '压在胸口，抬不起头。',       w: { endure: 2 } },
-        { t: '悬在半空，我够不到。',       w: { drift: 2 } },
-        { t: '隔着很长一段路，走不过去。', w: { yearn: 2 } },
-        { t: '是关于某个人的，我不想说。', w: { warm: 2, yearn: 1 } }
+        { t: '压在胸口，抬不起头。',                 w: { endure: 2 } },
+        { t: '悬在半空，我够不到。',                 w: { drift: 2 } },
+        { t: '隔着很长一段路，走不过去。',           w: { yearn: 2 } },
+        { t: '是关于某个人的，我不想说。',           w: { warm: 2, yearn: 1 } },
+        { t: '我假装它不在，但它总在半夜回来。',     w: { escape: 2, drift: 1 } },
+        { t: '它还在，但今天我能把它放下一会儿。',   w: { bright: 2, endure: 1 } }
       ]
     },
     {
       tag: '想念',
       q: '走神的时候，你想起谁？',
       opts: [
-        { t: '一个我不敢联系的人。',     w: { yearn: 2 } },
-        { t: '一个正在等我的人。',       w: { warm: 2, yearn: 1 } },
-        { t: '很久以前的我自己。',       w: { endure: 2 } },
-        { t: '谁也没想，脑子里是空的。', w: { escape: 2, drift: 1 } }
+        { t: '一个我不敢联系的人。',                             w: { yearn: 2 } },
+        { t: '一个正在等我的人。',                               w: { warm: 2, yearn: 1 } },
+        { t: '很久以前的我自己。',                               w: { endure: 2, yearn: 1 } },
+        { t: '谁也没想，脑子里是空的。',                         w: { drift: 2, escape: 1 } },
+        { t: '一个已经不在的人。',                               w: { yearn: 2, endure: 1 } },
+        { t: '一个我还没遇见的人，或者一种还没发生的生活。',     w: { escape: 2, bright: 1 } }
+      ]
+    },
+    {
+      tag: '自己',
+      q: '今天，你对自己说过什么？',
+      opts: [
+        { t: '再撑一下，别停。',       w: { endure: 2 } },
+        { t: '我也不知道该怎么办。',   w: { drift: 2 } },
+        { t: '要是有人在就好了。',     w: { yearn: 2, warm: 1 } },
+        { t: '你已经做得够好了。',     w: { warm: 2, bright: 1 } },
+        { t: '算了，先逃开再说。',     w: { escape: 2 } },
+        { t: '怎么又搞砸了。',         w: { drift: 1.5, endure: 1 } }
       ]
     },
     {
@@ -1005,18 +1035,22 @@
       opts: [
         { t: '撑得住，一直都撑得住。',       w: { endure: 2 } },
         { t: '不知道，只能到明天再说。',     w: { drift: 2 } },
-        { t: '撑不住，但也没有别的办法。',   w: { escape: 2, endure: 1 } },
-        { t: '撑得住，而且我觉得会好起来。', w: { bright: 2, warm: 1 } }
+        { t: '撑不住，但也没有别的办法。',   w: { endure: 1, escape: 2 } },
+        { t: '撑得住，而且我觉得会好起来。', w: { bright: 2, warm: 1 } },
+        { t: '我不想撑了，我想先离开一下。', w: { escape: 2, drift: 1 } },
+        { t: '我希望明天有个人能站在我这边。', w: { warm: 2, yearn: 1 } }
       ]
     },
     {
       tag: '此刻',
       q: '此刻，你最想要哪一样？',
       opts: [
-        { t: '有人抱我一下，说没事。',     w: { warm: 2 } },
-        { t: '一个人待着，谁都别来管我。', w: { escape: 2 } },
-        { t: '一个明确的答案。',           w: { drift: 2 } },
-        { t: '想见他一面，就现在。',       w: { yearn: 2 } }
+        { t: '有人抱我一下，说没事。',       w: { warm: 2 } },
+        { t: '一个人待着，谁都别来管我。',   w: { escape: 2 } },
+        { t: '一个明确的答案。',             w: { drift: 2 } },
+        { t: '想见他一面，就现在。',         w: { yearn: 2 } },
+        { t: '想停下来歇一歇，不用再撑。',   w: { endure: 2 } },
+        { t: '想出门走走，看看太阳。',       w: { bright: 2, escape: 1 } }
       ]
     }
   ];
@@ -1223,6 +1257,7 @@
   function renderQ() {
     var q = QS[state.qi];
     $('#qnow').textContent = pad(state.qi + 1);
+    $('#qtotal').textContent = pad(QS.length);
     $('#qlabel').textContent = q.tag || '';
     $('#progbar').style.width = (state.qi / QS.length * 100) + '%';
     $('#qtext').textContent = q.q;
@@ -1233,7 +1268,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'opt';
-      b.innerHTML = '<i>' + 'ABCD'.charAt(i) + '</i><span></span>';
+      b.innerHTML = '<i>' + String.fromCharCode(65 + i) + '</i><span></span>';
       b.lastChild.textContent = o.t;
       b.addEventListener('click', function () { choose(i); });
       box.appendChild(b);
@@ -1440,11 +1475,6 @@
   var ambEl = null;
   var ambState = { scale: 1, opacity: 1 };
   var ambientTween = null;
-
-  function rgba(hex, a) {
-    var n = parseInt(hex.slice(1), 16);
-    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
-  }
 
   function rgbaRgb(rgb, a) {
     return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')';
@@ -1757,20 +1787,6 @@
     return { x: r * ca * cb, y: r * sa, z: r * ca * sb };
   }
 
-  function makeGlowSprite(color) {
-    var c = document.createElement('canvas');
-    c.width = 64; c.height = 64;
-    var g = c.getContext('2d');
-    var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gr.addColorStop(0, 'rgba(255,255,255,.95)');
-    gr.addColorStop(.22, rgba(color, .9));
-    gr.addColorStop(.55, rgba(color, .25));
-    gr.addColorStop(1, rgba(color, 0));
-    g.fillStyle = gr;
-    g.fillRect(0, 0, 64, 64);
-    return c;
-  }
-
   /* 每朵花自己的颜色糊成一层光，比统一白光更像花在发光 */
   function makeFlowerGlow(img) {
     var c = document.createElement('canvas');
@@ -1812,7 +1828,7 @@
       return { img: off, glow: makeFlowerGlow(off) };
     });
 
-    var count = size < 480 ? 50 : 75;
+    var count = size < 480 ? 65 : 100;
     var particles = [];
     for (var i = 0; i < count; i++) {
       var near = Math.random() < 0.4;
@@ -1841,7 +1857,6 @@
       size: size,
       flowers: flowers,
       particles: particles,
-      glows: PALETTE.map(makeGlowSprite),
       ring: size * 0.39,
       ringScale: prevScale,
       ringTarget: prevTarget,
@@ -1850,7 +1865,7 @@
       cam: size * 0.68,
       ct: Math.cos(tilt),
       st: Math.sin(tilt),
-      trail: size < 480 ? 9 : 13,
+      trail: size < 480 ? 26 : 40,
       mode: 'normal',
       spin: 0,
       spinSpeed: 0.09,
@@ -1872,8 +1887,9 @@
 
     var pts = [head];
     var k;
+    var dt = 0.46 / o.trail;
     for (k = 1; k <= o.trail; k++) {
-      pts.push(orbitProject(o, particlePos(p, t - k * 0.034, o)));
+      pts.push(orbitProject(o, particlePos(p, t - k * dt, o)));
     }
 
     var mix = Math.min(1, (t - p.mixStart) / 0.9);
@@ -1887,58 +1903,34 @@
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
 
-    var lw = Math.max(0.75, Math.min(1, o.size / 547));
-    var wHead = 7 * lw;
-    var wTail = 0.5;
-    var left = [];
-    var right = [];
-    for (k = 0; k < n; k++) {
-      var p0 = pts[Math.max(0, k - 1)];
-      var p1 = pts[Math.min(n - 1, k + 1)];
-      var dx = p1.x - p0.x, dy = p1.y - p0.y;
-      var len = Math.sqrt(dx * dx + dy * dy) || 1;
-      var nx = -dy / len, ny = dx / len;
-      var fade = 1 - k / (n - 1);
-      var w = wTail + (wHead - wTail) * Math.pow(fade, 1.5);
-
-      left.push({ x: pts[k].x + nx * w / 2, y: pts[k].y + ny * w / 2 });
-      right.push({ x: pts[k].x - nx * w / 2, y: pts[k].y - ny * w / 2 });
+    /* 像素拖尾：一小格一小格地淡出去 */
+    for (k = n - 1; k >= 1; k--) {
+      var q = pts[k];
+      var f = 1 - k / (n - 1);
+      var sz = f > 0.55 ? 3 : (f > 0.25 ? 2 : 1);
+      var a = (0.14 + f * 0.55) * alpha * pa;
+      ctx.fillStyle = rgbaRgb(rgb, a);
+      ctx.fillRect(Math.round(q.x) - (sz >> 1), Math.round(q.y) - (sz >> 1), sz, sz);
     }
 
-    /* 流星拖尾：从头部向尾部收细，颜色一路淡出去 */
-    var grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[n - 1].x, pts[n - 1].y);
-    grad.addColorStop(0, rgbaRgb(rgb, 0.9 * alpha * pa));
-    grad.addColorStop(0.35, rgbaRgb(rgb, 0.4 * alpha * pa));
-    grad.addColorStop(1, rgbaRgb(rgb, 0));
+    /* 像素头：几层方块光 + 色块 + 1 像素白芯 */
+    var hx = Math.round(head.x), hy = Math.round(head.y);
+    var core = Math.max(3, Math.round((2.0 + p.s * 0.6) * head.k));
+    var s1 = core + 3;
+    var s2 = core + 5;
+    var s3 = core + 8;
 
-    ctx.beginPath();
-    ctx.moveTo(left[0].x, left[0].y);
-    for (k = 1; k < n; k++) ctx.lineTo(left[k].x, left[k].y);
-    for (k = n - 1; k >= 0; k--) ctx.lineTo(right[k].x, right[k].y);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fillStyle = rgbaRgb(rgb, 0.08 * alpha * pa);
+    ctx.fillRect(hx - (s3 >> 1), hy - (s3 >> 1), s3, s3);
+    ctx.fillStyle = rgbaRgb(rgb, 0.16 * alpha * pa);
+    ctx.fillRect(hx - (s2 >> 1), hy - (s2 >> 1), s2, s2);
+    ctx.fillStyle = rgbaRgb(rgb, 0.36 * alpha * pa);
+    ctx.fillRect(hx - (s1 >> 1), hy - (s1 >> 1), s1, s1);
+    ctx.fillStyle = rgbaRgb(rgb, 0.98 * alpha * pa);
+    ctx.fillRect(hx - (core >> 1), hy - (core >> 1), core, core);
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.95 * pa) + ')';
+    ctx.fillRect(hx, hy, 1, 1);
 
-    var g = p.s * head.k * 7.2;
-    if (p.from === p.to) {
-      ctx.globalAlpha = alpha * pa;
-      ctx.drawImage(o.glows[p.to], head.x - g, head.y - g, g * 2, g * 2);
-    } else {
-      if (mix < 0.995) {
-        ctx.globalAlpha = alpha * (1 - mix) * pa;
-        ctx.drawImage(o.glows[p.from], head.x - g, head.y - g, g * 2, g * 2);
-      }
-      if (mix > 0.005) {
-        ctx.globalAlpha = alpha * mix * pa;
-        ctx.drawImage(o.glows[p.to], head.x - g, head.y - g, g * 2, g * 2);
-      }
-    }
-
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(255,255,255,' + ((0.65 + alpha * 0.3) * pa) + ')';
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, Math.max(0.7, p.s * head.k * 0.6), 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
   }
 
