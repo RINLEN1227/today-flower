@@ -352,7 +352,7 @@
 
 <script>
 /* ===========================================================
-   像素花谱 · 十五种
+   像素花谱 · 十八种
    画法约定（沿用鹤望兰那一版）：
    · 只用纯色块，硬边，一块 1px；
    · 每片花瓣最多两三层明暗，不描边；
@@ -843,6 +843,131 @@
     p.disc(32, 28, 1, '#C99A24');
   }
 
+  /* ---------- 16 丁香 ---------- */
+  function lilac(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#4C7544', G2 = '#6E9C5C', BR = '#6B5A48', BR2 = '#8A775F';
+    var W1 = '#FFFDF7', W2 = '#F3EDE1', W3 = '#DED6C7', W4 = '#C9C2CC';
+
+    p.curve(18, 64, 22, 50, 31, 40, 2, BR);
+    p.curve(31, 40, 34, 33, 39, 24, 2, BR2);
+    p.curve(31, 40, 25, 36, 19, 32, 1, BR2);
+
+    function leaf(x, y, ang, L, w, c1, c2) {
+      p.petal(x, y, ang, L, w, c1);
+      p.petal(x, y, ang, L * 0.78, w * 0.42, c2);
+    }
+    leaf(22, 54, -128 * D2R, 12, 6.5, G1, G2);
+    leaf(28, 46, -52 * D2R, 11, 6, G1, G2);
+    leaf(34, 38, -122 * D2R, 9, 5, G1, G2);
+
+    function floret(x, y, c) {
+      ring(p, x, y, 4, 2.3 * a.b, 2.1, c, 45);
+      p.px(x, y, 1, 1, W1);
+    }
+    function cluster(cx, cy, rows, w, stepX, stepY) {
+      for (var r = 0; r < rows; r++) {
+        var t = (r + 0.5) / rows;
+        var y = cy + (r - (rows - 1) / 2) * stepY;
+        var width = w * Math.sin(Math.PI * (0.18 + 0.72 * t));
+        var count = Math.max(1, Math.round(width / stepX) + 1);
+        for (var k = 0; k < count; k++) {
+          var x = cx + (k - (count - 1) / 2) * stepX;
+          var c = r < rows * 0.35 ? W1 : (r < rows * 0.7 ? W2 : W3);
+          if ((r * 7 + k * 3) % 11 === 0) c = W2;
+          floret(x, y, c);
+        }
+      }
+    }
+    cluster(39, 21, 7, 12, 3.4, 2.7);
+    cluster(19, 33, 5, 8, 3.2, 2.5);
+    floret(30, 24, W2);
+    floret(48, 26, W3);
+    floret(45, 33, W3);
+    floret(33, 37, W4);
+  }
+
+  /* ---------- 17 茉莉 ---------- */
+  function jasmine(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#3F6236', G2 = '#5E8250';
+    var W1 = '#FFFDF7', W2 = '#F4EEE2', W3 = '#D9D1C3', Y1 = '#F2C13C', Y2 = '#D89A24';
+
+    p.curve(29, 64, 27, 48, 33, 32, 2, G1);
+    p.curve(33, 32, 35, 26, 32, 19, 1, G2);
+    p.curve(33, 34, 41, 31, 46, 29, 1, G2);
+
+    function leaf(x, y, ang, L, w) {
+      p.petal(x, y, ang, L, w, G1);
+      p.petal(x, y, ang, L * 0.78, w * 0.45, G2);
+    }
+    leaf(27, 54, -140 * D2R, 12, 6);
+    leaf(31, 46, -40 * D2R, 11, 5.5);
+    leaf(35, 38, -150 * D2R, 9, 4.5);
+    leaf(30, 60, -45 * D2R, 9, 4.5);
+
+    function bloom(cx, cy, L, rot) {
+      ring(p, cx, cy, 5, L * 1.04, L * 0.5, W3, rot);
+      ring(p, cx, cy, 5, L * 0.9, L * 0.4, W1, rot);
+      p.disc(cx, cy, Math.max(2, Math.round(L * 0.2)), Y1);
+      p.disc(cx, cy, Math.max(1, Math.round(L * 0.09)), Y2);
+    }
+    bloom(32, 20, 9.2, -90 * D2R);
+    bloom(17, 30, 6.8, -68 * D2R);
+    bloom(46, 29, 7.2, -112 * D2R);
+
+    p.petal(41, 40, -62 * D2R, 6.4, 3.0, G2);
+    p.petal(41, 40, -62 * D2R, 4.6, 2.0, W2);
+    p.px(41, 40, 1, 1, W1);
+  }
+
+  /* ---------- 18 睡莲 ---------- */
+  function waterlily(ctx, t) {
+    var p = P(ctx), a = anim(t);
+    var G1 = '#3F6236', G2 = '#547D46', G3 = '#6E9C5C', G4 = '#2E4C34';
+    var W1 = '#FFFDF7', W2 = '#F4EEE2', W3 = '#E6DED0', W4 = '#D2C9BB';
+    var Y1 = '#F2C13C', Y2 = '#D89A24';
+
+    for (var by = -2; by <= 2; by++) {
+      var bw = Math.round(Math.sqrt(1 - (by / 3.6) * (by / 3.6)) * 14);
+      p.px(40 - bw, 47 + by, bw * 2, 1, G4);
+    }
+
+    for (var dy = -5; dy <= 5; dy++) {
+      var w = Math.round(Math.sqrt(1 - (dy / 5.6) * (dy / 5.6)) * 24);
+      var x0 = 30 - w, x1 = 30 + w;
+      if (dy >= -2 && dy <= 2) x1 -= (3 - Math.abs(dy)) * 4;
+      p.px(x0, 50 + dy, x1 - x0, 1, dy < -2 ? G2 : (dy < 2 ? G1 : G4));
+    }
+    p.px(10, 50, 8, 1, G3);
+    p.px(44, 51, 6, 1, G3);
+    p.px(31, 50, 1, 6, G3);
+    p.px(24, 52, 6, 1, G2);
+    p.px(34, 53, 7, 1, G2);
+    p.px(2, 59, 8, 1, '#243330');
+    p.px(52, 60, 10, 1, '#243330');
+    p.px(18, 62, 12, 1, '#1E2B28');
+
+    for (var sy = -2; sy <= 2; sy++) {
+      var sw = Math.round(Math.sqrt(1 - (sy / 2.6) * (sy / 2.6)) * 11);
+      p.px(32 - sw, 45 + sy, sw * 2, 1, G4);
+    }
+
+    p.petal(28, 40, 118 * D2R, 8, 5.5, G2);
+    p.petal(36, 40, 62 * D2R, 8, 5.5, G2);
+
+    ring(p, 32, 32, 7, 13.0 * a.b, 8.0, W3, -90);
+    ring(p, 32, 32, 6, 10.5 * a.b, 6.8, W2, -64);
+    ring(p, 32, 32, 5, 7.8 * a.b, 5.6, W1, -77);
+    ring(p, 32, 32, 4, 5.2 * a.b, 4.2, W1, -58);
+
+    p.disc(32, 32, 3, Y1);
+    p.disc(32, 32, 1, Y2);
+    [[28, 32], [36, 32], [32, 28], [32, 36], [29, 29], [35, 29], [29, 35], [35, 35]].forEach(function (q) {
+      p.px(q[0], q[1], 1, 1, Y1);
+    });
+  }
+
   root.FLOWERS = {
     chamomile: { no: '01', name: '洋甘菊', en: 'Chamomile', latin: 'Matricaria', huayu: '苦难中的力量', draw: chamomile },
     lily:      { no: '02', name: '铃兰',   en: 'Lily of the Valley', latin: 'Convallaria', huayu: '幸福再次降临', draw: lily },
@@ -858,7 +983,10 @@
     strelitzia:{ no: '12', name: '鹤望兰', en: 'Bird of Paradise', latin: 'Strelitzia', huayu: '自由 · 用心去爱', draw: strelitzia },
     delphinium:{ no: '13', name: '飞燕草', en: 'Larkspur', latin: 'Delphinium', huayu: '自由 · 美丽轻盈', draw: delphinium },
     sunflower: { no: '14', name: '向日葵', en: 'Sunflower', latin: 'Helianthus', huayu: '爱慕 · 沉默的爱', draw: sunflower },
-    cosmos:    { no: '15', name: '波斯菊', en: 'Cosmos', latin: 'Cosmos', huayu: '少女的真心 · 自由', draw: cosmos }
+    cosmos:    { no: '15', name: '波斯菊', en: 'Cosmos', latin: 'Cosmos', huayu: '少女的真心 · 自由', draw: cosmos },
+    lilac:     { no: '16', name: '丁香', en: 'Lilac', latin: 'Syringa', huayu: '安宁 · 清白', draw: lilac },
+    jasmine:   { no: '17', name: '茉莉', en: 'Jasmine', latin: 'Jasminum', huayu: '亲切 · 宁静', draw: jasmine },
+    waterlily: { no: '18', name: '睡莲', en: 'Water Lily', latin: 'Nymphaea', huayu: '清净 · 心安', draw: waterlily }
   };
 
   root.FLOWER_PALETTE = {
@@ -869,7 +997,7 @@
     pollen: 'rgba(240,226,208,'
   };
 
-  /* 花粉：十五朵共用，标题页的主线 */
+  /* 花粉：十八朵共用，标题页的主线 */
   root.makePollen = function (n, w, h) {
     var arr = [];
     for (var i = 0; i < n; i++) {
@@ -886,7 +1014,7 @@
 })(window);
 </script>
 <script>
-/* 十五朵花的文案：三段，短、短、长，最后一段最重 */
+/* 十八朵花的文案：三段，短、短、长，最后一段最重 */
 (function (root) {
   root.FLOWER_WORDS = {
     chamomile: [
@@ -963,6 +1091,21 @@
       '波斯菊在秋风里摇得很厉害，看着要倒了，其实根扎得稳。',
       '你今天笑得这么开心，我希望你相信这份开心是真的，不是你装出来的。',
       '你值得这么好的一天，也值得被这样喜欢。'
+    ],
+    lilac: [
+      '丁香一朵只有四片花瓣，小到要凑近才看得清。',
+      '可它一开，整条街都是香的——它不靠一朵花撑场面，是一小朵一小朵凑在一起。',
+      '所以你也不用开给谁看。今天我就站在能闻到你的地方，多待一会儿。'
+    ],
+    jasmine: [
+      '茉莉是在夜里香的。白天它只是叶子中间一小朵白，安安静静地待着。',
+      '有人把它别在衣襟上，有人把它放进茶里；它不挑地方，也不争。',
+      '今天我也想别在你衣襟上。你不说话也没关系，我陪你待一会儿。'
+    ],
+    waterlily: [
+      '睡莲每天醒来就开，天黑就合上。它不熬夜，也不急着把花开完。',
+      '水面上什么都没有，它还是一层一层把花瓣铺好，像在给自己留一个安静的位置。',
+      '你也可以合上一天。我不催你开，我就在水边坐着，等你明天自己醒。'
     ]
   };
 
@@ -970,7 +1113,8 @@
   root.FLOWER_ORDER = [
     'chamomile', 'lily', 'bluestar', 'hydrangea', 'hyacinth',
     'forget', 'pansy', 'sakura', 'rose', 'platycodon',
-    'sweetpea', 'strelitzia', 'delphinium', 'sunflower', 'cosmos'
+    'sweetpea', 'strelitzia', 'delphinium', 'sunflower', 'cosmos',
+    'lilac', 'jasmine', 'waterlily'
   ];
 })(window);
 </script>
@@ -978,13 +1122,13 @@
 /* ===========================================================
    情绪花语 · 题目与匹配
    -----------------------------------------------------------
-   六个心情维度，十五朵花各占一个位置。
-   答题只做一件事：把五道题的选择累加成一个人此刻的「形状」。
+   七个心情维度，十八朵花各占一个位置。
+   答题只做一件事：把七道题的选择累加成一个人此刻的「形状」。
    然后按方向（余弦）找最近的朵——不比谁分高，比谁的方向对。
    =========================================================== */
 (function (root) {
 
-  var DIMS = ['endure', 'drift', 'yearn', 'warm', 'escape', 'bright'];
+  var DIMS = ['endure', 'drift', 'yearn', 'warm', 'escape', 'bright', 'calm'];
 
   var CLUSTER_NAME = {
     endure: '撑住',
@@ -992,45 +1136,50 @@
     yearn:  '想念',
     warm:   '爱着',
     escape: '想飞',
-    bright: '明亮'
+    bright: '明亮',
+    calm:   '平静'
   };
 
-  /* 七道题：不随机、不打乱，顺序就是情绪往下走的顺序 */
+  /* 七道题：不随机、不打乱，顺序就是情绪往下走的顺序。
+     每题七个选项，最后一档留给「今天没什么事」的人。 */
   var QUESTIONS = [
     {
       tag: '天气',
       q: '今天醒来，心里是什么天气？',
       opts: [
-        { t: '天还没亮，我就先醒了。',                 w: { endure: 2 } },
-        { t: '有雾，看不清远一点的地方。',             w: { drift: 2 } },
+        { t: '天还没亮，我就先醒了。',                 w: { endure: 2, calm: 0.1 } },
+        { t: '有雾，看不清远一点的地方。',             w: { drift: 2, calm: 0.2 } },
         { t: '醒来第一件事，是想知道某个人现在好不好。', w: { yearn: 2, warm: 0.5 } },
-        { t: '有点吵，但身边有人，光是暖的。',         w: { warm: 2, bright: 1 } },
+        { t: '有点吵，但身边有人，光是暖的。',         w: { warm: 2, bright: 1, calm: 0.3 } },
         { t: '风很大，云被吹得乱七八糟。',             w: { escape: 2, drift: 0.5 } },
-        { t: '窗外很亮，今天好像可以过得不错。',       w: { bright: 2, warm: 0.5 } }
+        { t: '窗外很亮，今天好像可以过得不错。',       w: { bright: 2, warm: 0.5, calm: 0.5 } },
+        { t: '没什么特别的，就是平常的一天。',         w: { calm: 2, bright: 0.5 } }
       ]
     },
     {
       tag: '身体',
       q: '身体现在是什么感觉？',
       opts: [
-        { t: '肩膀和牙关都绷着，放松不下来。',           w: { endure: 2 } },
-        { t: '轻飘飘的，像没睡醒，也像没着陆。',         w: { drift: 2 } },
+        { t: '肩膀和牙关都绷着，放松不下来。',           w: { endure: 2, calm: 0.1 } },
+        { t: '轻飘飘的，像没睡醒，也像没着陆。',         w: { drift: 2, calm: 0.2 } },
         { t: '胸口有点闷，像压着一句没说出口的话。',     w: { yearn: 2, warm: 0.5 } },
-        { t: '累，但是暖的，像刚被人抱过。',             w: { warm: 2, bright: 0.5 } },
+        { t: '累，但是暖的，像刚被人抱过。',             w: { warm: 2, bright: 0.5, calm: 0.3 } },
         { t: '坐不住，想走，想跑，心里还有一股火。',     w: { escape: 2 } },
-        { t: '很久没这么轻了，想伸个懒腰。',             w: { bright: 2, warm: 0.5 } }
+        { t: '很久没这么轻了，想伸个懒腰。',             w: { bright: 2, warm: 0.5, calm: 0.5 } },
+        { t: '身体没什么特别的感觉，挺正常的。',         w: { calm: 2, bright: 0.5 } }
       ]
     },
     {
       tag: '心事',
-      q: '那件还没解决的事，现在在哪儿？',
+      q: '如果心里有一件事还没放下，它现在在哪儿？',
       opts: [
         { t: '压在胸口，抬不起头。',                 w: { endure: 2 } },
         { t: '悬在半空，我够不到。',                 w: { drift: 2 } },
         { t: '隔着很长一段路，走不过去。',           w: { yearn: 2 } },
         { t: '是关于某个人的，我不想说。',           w: { warm: 2, yearn: 1 } },
         { t: '我假装它不在，但它总在半夜回来。',     w: { escape: 2, drift: 1 } },
-        { t: '它还在，但今天我能把它放下一会儿。',   w: { bright: 2, endure: 1 } }
+        { t: '它还在，但今天我能把它放下一会儿。',   w: { bright: 2, endure: 1, calm: 0.5 } },
+        { t: '其实没什么事，今天挺平常的。',         w: { calm: 2, bright: 0.5, warm: 0.5 } }
       ]
     },
     {
@@ -1040,9 +1189,10 @@
         { t: '一个我不敢联系的人。',                             w: { yearn: 2 } },
         { t: '一个正在等我的人。',                               w: { warm: 2, yearn: 1 } },
         { t: '很久以前的我自己。',                               w: { endure: 2, yearn: 1 } },
-        { t: '谁也没想，脑子里是空的。',                         w: { drift: 2, escape: 1 } },
+        { t: '谁也没想，脑子里是空的。',                         w: { drift: 2, escape: 1, calm: 0.3 } },
         { t: '一个已经不在的人。',                               w: { yearn: 2, endure: 1 } },
-        { t: '一个我还没遇见的人，或者一种还没发生的生活。',     w: { escape: 2, bright: 1 } }
+        { t: '一个我还没遇见的人，或者一种还没发生的生活。',     w: { escape: 2, bright: 1 } },
+        { t: '谁也没想，就是安安静静地待着。',                   w: { calm: 2, bright: 0.5, warm: 0.5 } }
       ]
     },
     {
@@ -1052,60 +1202,67 @@
         { t: '再撑一下，别停。',       w: { endure: 2 } },
         { t: '我也不知道该怎么办。',   w: { drift: 2 } },
         { t: '要是有人在就好了。',     w: { yearn: 2, warm: 1 } },
-        { t: '你已经做得够好了。',     w: { warm: 2, bright: 1 } },
+        { t: '你已经做得够好了。',     w: { warm: 2, bright: 1, calm: 0.5 } },
         { t: '算了，先逃开再说。',     w: { escape: 2 } },
-        { t: '怎么又搞砸了。',         w: { drift: 1.5, endure: 1 } }
+        { t: '怎么又搞砸了。',         w: { drift: 1.5, endure: 1 } },
+        { t: '没跟自己说什么，今天挺平静的。', w: { calm: 2, bright: 0.5 } }
       ]
     },
     {
-      tag: '勇气',
-      q: '明天要是还这样，你撑得住吗？',
+      tag: '明天',
+      q: '想到明天，你是什么感觉？',
       opts: [
-        { t: '撑得住，一直都撑得住。',       w: { endure: 2 } },
-        { t: '不知道，只能到明天再说。',     w: { drift: 2 } },
-        { t: '撑不住，但也没有别的办法。',   w: { endure: 1, escape: 2 } },
-        { t: '撑得住，而且我觉得会好起来。', w: { bright: 2, warm: 1 } },
-        { t: '我不想撑了，我想先离开一下。', w: { escape: 2, drift: 1 } },
-        { t: '我希望明天有个人能站在我这边。', w: { warm: 2, yearn: 1 } }
+        { t: '有点沉，但我知道自己撑得住。',   w: { endure: 2, calm: 0.3 } },
+        { t: '说不清，走一步看一步。',         w: { drift: 2 } },
+        { t: '有点怕，不太想面对。',           w: { escape: 2, drift: 1 } },
+        { t: '觉得会慢慢好起来。',             w: { bright: 2, warm: 1, calm: 0.3 } },
+        { t: '没什么特别的感觉，明天大概也差不多。', w: { calm: 2, drift: 0.5, bright: 0.5 } },
+        { t: '希望明天有人能站在我这边。',     w: { warm: 2, yearn: 1 } },
+        { t: '有点期待，明天有想做的事。',     w: { bright: 2, escape: 1, calm: 0.3 } }
       ]
     },
     {
       tag: '此刻',
       q: '此刻，你最想要哪一样？',
       opts: [
-        { t: '有人抱我一下，说没事。',       w: { warm: 2 } },
-        { t: '一个人待着，谁都别来管我。',   w: { escape: 2 } },
+        { t: '有人抱我一下，说没事。',       w: { warm: 2, calm: 0.3 } },
+        { t: '一个人待着，谁都别来管我。',   w: { escape: 2, calm: 0.3 } },
         { t: '一个明确的答案。',             w: { drift: 2 } },
         { t: '想见他一面，就现在。',         w: { yearn: 2 } },
-        { t: '想停下来歇一歇，不用再撑。',   w: { endure: 2 } },
-        { t: '想出门走走，看看太阳。',       w: { bright: 2, escape: 1 } }
+        { t: '想停下来歇一歇，不用再撑。',   w: { endure: 2, calm: 0.5 } },
+        { t: '想出门走走，看看太阳。',       w: { bright: 2, escape: 1, calm: 0.3 } },
+        { t: '什么都不缺，现在这样挺好。',   w: { calm: 2, warm: 1, bright: 0.5 } }
       ]
     }
   ];
 
-  /* 十五朵花的坐标：主维 = 1，另外几项说明「这朵花偏哪边」。
+  /* 十八朵花的坐标：主维 = 1，另外几项说明「这朵花偏哪边」。
      凡是偏得越明显的，就越少抢到别人那一票。 */
   var ANCHORS = {
-    chamomile:  { c: 'endure', v: { endure: 1.00, warm: 0.15, escape: 0.20 } },
-    lily:       { c: 'endure', v: { endure: 1.00, bright: 0.95, yearn: 0.25 } },
-    hyacinth:   { c: 'endure', v: { endure: 1.00, yearn: 0.95, warm: 0.30 } },
-    platycodon: { c: 'endure', v: { endure: 0.90, warm: 0.95, yearn: 0.45 } },
+    chamomile:  { c: 'endure', v: { endure: 1.00, warm: 0.15, escape: 0.20, calm: 0.30 } },
+    lily:       { c: 'endure', v: { endure: 1.00, bright: 0.95, yearn: 0.25, calm: 0.35 } },
+    hyacinth:   { c: 'endure', v: { endure: 1.00, yearn: 0.95, warm: 0.30, calm: 0.20 } },
+    platycodon: { c: 'endure', v: { endure: 0.90, warm: 0.95, yearn: 0.45, calm: 0.15 } },
 
-    bluestar:   { c: 'drift',  v: { drift: 1.00, bright: 0.45, escape: 0.25 } },
-    hydrangea:  { c: 'drift',  v: { drift: 1.00, yearn: 0.60, warm: 0.55 } },
+    bluestar:   { c: 'drift',  v: { drift: 1.00, bright: 0.45, escape: 0.25, calm: 0.25 } },
+    hydrangea:  { c: 'drift',  v: { drift: 1.00, yearn: 0.60, warm: 0.55, calm: 0.30 } },
 
-    forget:     { c: 'yearn',  v: { yearn: 1.00, drift: 0.90, warm: 0.25 } },
-    pansy:      { c: 'yearn',  v: { yearn: 1.00, warm: 0.95, escape: 0.20 } },
-    sakura:     { c: 'yearn',  v: { yearn: 1.00, bright: 0.95, warm: 0.30 } },
+    forget:     { c: 'yearn',  v: { yearn: 1.00, drift: 0.90, warm: 0.25, calm: 0.15 } },
+    pansy:      { c: 'yearn',  v: { yearn: 1.00, warm: 0.95, escape: 0.20, calm: 0.10 } },
+    sakura:     { c: 'yearn',  v: { yearn: 1.00, bright: 0.95, warm: 0.30, calm: 0.30 } },
 
-    rose:       { c: 'warm',   v: { warm: 1.00, endure: 0.35, yearn: 0.45 } },
-    sweetpea:   { c: 'warm',   v: { warm: 1.00, bright: 0.90, escape: 0.20 } },
+    rose:       { c: 'warm',   v: { warm: 1.00, endure: 0.35, yearn: 0.45, calm: 0.15 } },
+    sweetpea:   { c: 'warm',   v: { warm: 1.00, bright: 0.90, escape: 0.20, calm: 0.20 } },
 
-    strelitzia: { c: 'escape', v: { escape: 1.00, endure: 0.90, drift: 0.20 } },
-    delphinium: { c: 'escape', v: { escape: 1.00, bright: 0.60, drift: 0.50 } },
+    strelitzia: { c: 'escape', v: { escape: 1.00, endure: 0.90, drift: 0.20, calm: 0.10 } },
+    delphinium: { c: 'escape', v: { escape: 1.00, bright: 0.60, drift: 0.50, calm: 0.25 } },
 
-    sunflower:  { c: 'bright', v: { bright: 1.00, warm: 0.90, endure: 0.15 } },
-    cosmos:     { c: 'bright', v: { bright: 1.00, escape: 0.90, warm: 0.30 } }
+    sunflower:  { c: 'bright', v: { bright: 1.00, warm: 0.90, endure: 0.15, calm: 0.25 } },
+    cosmos:     { c: 'bright', v: { bright: 1.00, escape: 0.90, warm: 0.30, calm: 0.30 } },
+
+    lilac:      { c: 'calm',   v: { calm: 1.00, warm: 0.60, bright: 0.35 } },
+    jasmine:    { c: 'calm',   v: { calm: 1.00, warm: 0.80, yearn: 0.30 } },
+    waterlily:  { c: 'calm',   v: { calm: 1.00, bright: 0.50, endure: 0.30 } }
   };
 
   /* 每一维的满分：按题自动推，改题不用改这里 */
@@ -1121,7 +1278,7 @@
   });
 
   /* 并列时谁优先：先看温柔和想念，再看明亮，最后才看累 */
-  var ORDER = ['warm', 'yearn', 'bright', 'endure', 'drift', 'escape'];
+  var ORDER = ['warm', 'yearn', 'bright', 'calm', 'endure', 'drift', 'escape'];
 
   function analyze(answers) {
     var raw = {};
@@ -1142,7 +1299,7 @@
       if (top === null || prof[d] > prof[top] + 1e-9) top = d;
     });
 
-    /* 十五朵一起比方向：不做硬分簇，否则「又撑着又在爱」这种
+    /* 十八朵一起比方向：不做硬分簇，否则「又撑着又在爱」这种
        跨在边界上的人会被推到自己并不像的那一朵去 */
     var pick = null, pickScore = -1;
     for (var id in ANCHORS) {
@@ -1185,14 +1342,15 @@
   var ANSWERS_KEY = 'mood:answers';
   var RETURN_KEY = 'mood:return';
 
-  /* 六种心情维度：中间光粒的颜色 */
+  /* 七种心情维度：中间光粒的颜色 */
   var MOODS = [
     { name: '撑住', color: '#9CE86A' },
     { name: '悬着', color: '#93BFFF' },
     { name: '想念', color: '#C4B0FF' },
     { name: '爱着', color: '#FFA0AE' },
     { name: '想飞', color: '#5FE8DC' },
-    { name: '明亮', color: '#FFC85E' }
+    { name: '明亮', color: '#FFC85E' },
+    { name: '平静', color: '#FFFFFF' }
   ];
 
 
@@ -1430,6 +1588,7 @@
 
   function buildResultCard(hold) {
     var r = window.moodAnalyze(state.answers);
+    setBgMood(r.profile);
     var f = window.FLOWERS[r.id];
     var words = window.FLOWER_WORDS[r.id] || [];
     var q1 = stripEnd(QS[0].opts[state.answers[0]].t);
@@ -1489,7 +1648,7 @@
   }
 
   /* ---------------------------------------------------------
-     封面：十五朵花在平面上绕圈，中心是一团绕着开始键的光粒
+     封面：十八朵花在平面上绕圈，中心是一团绕着开始键的光粒
      --------------------------------------------------------- */
   var orbit = null;
   var orbitTimer = null;
@@ -1498,7 +1657,7 @@
     var n = parseInt(hex.slice(1), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   });
-  var DIM_ORDER = ['endure', 'drift', 'yearn', 'warm', 'escape', 'bright'];
+  var DIM_ORDER = ['endure', 'drift', 'yearn', 'warm', 'escape', 'bright', 'calm'];
 
   var ambEl = null;
   var ambState = { scale: 1, opacity: 1 };
@@ -1668,6 +1827,15 @@
 
     for (var j = 0; j < ps.length; j++) {
       var p = ps[j];
+
+      /* 五分之一是固定的白光点，不跟着答题换色，像一小束一直亮着的白 */
+      if (p.white) {
+        p.from = 6;
+        p.to = 6;
+        p.mixStart = -10;
+        continue;
+      }
+
       var to = p.base;
 
       if (total > 0) {
@@ -1951,10 +2119,13 @@
     var particles = [];
     for (var i = 0; i < count; i++) {
       var near = Math.random() < 0.4;
+      var white = i % 5 === 0;
+      var base = white ? 6 : (i % 7);
       particles.push({
-        base: i % 6,
-        from: i % 6,
-        to: i % 6,
+        base: base,
+        from: base,
+        to: base,
+        white: white,
         mixStart: -10,
         pick: Math.random(),
         r: near ? 0.06 + Math.random() * 0.46 : 0.5 + Math.pow(Math.random(), 0.6) * 0.5,
@@ -2074,7 +2245,7 @@
     back.stroke();
     back.restore();
 
-    /* 十五朵花：平面圆环，慢慢转，花头始终朝上；每朵带一层自己的光 */
+    /* 十八朵花：平面圆环，慢慢转，花头始终朝上；每朵带一层自己的光 */
     var n = o.flowers.length;
     var step = Math.PI * 2 / n;
     var baseSpin = -Math.PI / 2 + o.spin;
